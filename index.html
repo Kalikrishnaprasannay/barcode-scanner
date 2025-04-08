@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📦 Product Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://unpkg.com/html5-qrcode@2.3.9/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    #reader {
+      width: 350px;
+      margin: auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+    img {
+      margin-top: 10px;
+      width: 150px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📦 Barcode/QR Product Scanner</h2>
+  <div id="reader"></div>
+  <div id="result">Click to start scanning</div>
+  <button onclick="startScan()">▶ Start Scanner</button>
+
+  <script>
+    let html5QrCode;
+
+    async function fetchProductDetails(code) {
+      const url = `https://world.openfoodfacts.org/api/v0/product/${code}.json`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === 1) {
+        const product = data.product;
+        document.getElementById("result").innerHTML = `
+          ✅ <strong>${product.product_name || "Unnamed Product"}</strong><br>
+          🏷️ Brand: ${product.brands || "N/A"}<br>
+          🌍 Country: ${product.countries || "N/A"}<br>
+          <img src="${product.image_front_small_url}" alt="Product Image" />
+        `;
+      } else {
+        document.getElementById("result").innerText = "❌ Product not found.";
+      }
+    }
+
+    function startScan() {
+      document.getElementById("result").innerText = "📷 Starting camera...";
+      html5QrCode = new Html5Qrcode("reader");
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices.length) {
+          const cameraId = devices[0].id;
+
+          html5QrCode.start(
+            cameraId,
+            { fps: 10, qrbox: 250 },
+            qrCodeMessage => {
+              html5QrCode.stop().then(() => {
+                document.getElementById("result").innerText = `Scanned: ${qrCodeMessage}`;
+                fetchProductDetails(qrCodeMessage);
+              });
+            },
+            errorMessage => {
+              // Optional debug: console.log("Scan error:", errorMessage);
+            }
+          ).catch(err => {
+            document.getElementById("result").innerText = "❌ Error starting camera: " + err;
+          });
+        } else {
+          document.getElementById("result").innerText = "❌ No cameras found.";
+        }
+      }).catch(err => {
+        document.getElementById("result").innerText = "❌ Camera access error: " + err;
+      });
+    }
+  </script>
+
+</body>
+</html>
