@@ -1,6 +1,6 @@
 streamlit
 opencv-python-headless
 numpy
-zbarlight
+pyzbar
 Pillow
 requests
