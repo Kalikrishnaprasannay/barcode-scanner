@@ -1,6 +1,5 @@
 streamlit
 opencv-python-headless
+cvzone
 numpy
-pyzbar
 Pillow
-requests
